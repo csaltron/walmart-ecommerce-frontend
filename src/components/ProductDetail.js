@@ -15,11 +15,12 @@ function ProductDetail() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
+        setError(null);
         const data = await catalogService.getProductById(id);
         setProduct(data);
       } catch (err) {
-        console.error('Error cargando producto:', err);
-        setError('No se pudo cargar el producto');
+        setError(err.response?.data?.message || err.message || 'No se pudo cargar el producto');
+        setProduct(null);
       } finally {
         setLoading(false);
       }
@@ -27,19 +28,54 @@ function ProductDetail() {
 
     if (id) {
       fetchProduct();
+    } else {
+      setError('ID de producto no válido');
+      setLoading(false);
     }
   }, [id]);
 
   const formatPrice = (price) => {
+    if (price === undefined || price === null || isNaN(price)) {
+      return 'Precio no disponible';
+    }
     return `$${price.toFixed(2)}`;
   };
 
+  // Intentar diferentes nombres de campo para la imagen
+  const getImageUrl = () => {
+    if (!product) return comingSoonImage;
+    const imageUrl = product.imageUrl || product.image || product.image_url || product.imageURL;
+    if (imageUrl && imageUrl.trim() !== '') {
+      // Si la URL es relativa (empieza con /), podría necesitar el dominio del backend
+      // Si ya es una URL completa (http:// o https://), usarla tal cual
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        return imageUrl;
+      }
+      // Si es relativa, intentar con el proxy del backend
+      if (imageUrl.startsWith('/')) {
+        // El proxy está configurado en package.json para localhost:8080
+        return imageUrl;
+      }
+      return imageUrl;
+    }
+    return comingSoonImage;
+  };
+
   const handleImageError = (e) => {
-    e.target.src = comingSoonImage;
+    console.log('Error cargando imagen del producto:', {
+      imageUrl: product?.imageUrl,
+      image: product?.image,
+      image_url: product?.image_url,
+      imageURL: product?.imageURL,
+      srcIntentado: e.target.src
+    });
+    if (e.target.src !== comingSoonImage) {
+      e.target.src = comingSoonImage;
+    }
   };
 
   const handleBack = () => {
-    navigate(-1);
+    navigate('/');
   };
 
   if (loading) {
@@ -72,10 +108,11 @@ function ProductDetail() {
       <div className="product-detail">
         <div className="product-detail-image-section">
           <img
-            src={product.imageUrl || comingSoonImage}
-            alt={product.name}
+            src={getImageUrl()}
+            alt={product.name || 'Producto'}
             className="product-detail-image"
             onError={handleImageError}
+            onLoad={() => console.log('Imagen de detalle cargada correctamente:', getImageUrl())}
           />
           {product.discountPercentage && (
             <span className="product-detail-badge">↓ Rebaja {product.discountPercentage}%</span>
@@ -99,12 +136,14 @@ function ProductDetail() {
 
           <div className="product-detail-price-section">
             <div className="product-detail-price">
-              <span className="current-price-large">{formatPrice(product.price)}</span>
-              {product.oldPrice && (
+              {product.price !== undefined && product.price !== null && (
+                <span className="current-price-large">{formatPrice(product.price)}</span>
+              )}
+              {product.oldPrice && product.oldPrice !== undefined && product.oldPrice !== null && (
                 <span className="old-price-large">{formatPrice(product.oldPrice)}</span>
               )}
             </div>
-            {product.discountPercentage && (
+            {product.discountPercentage && product.price !== undefined && product.price !== null && product.oldPrice !== undefined && product.oldPrice !== null && (
               <div className="discount-info">
                 Ahorras {formatPrice(product.oldPrice - product.price)} ({product.discountPercentage}% de descuento)
               </div>
