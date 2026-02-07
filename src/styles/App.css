@@ -302,14 +302,15 @@ body {
 
 .product-badge {
   display: inline-block;
+  position: absolute;
   padding: 2px 8px;
-  border-radius: 3px;
-  font-size: 15px;
+  border-radius: 4px;
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: 8px;
-  list-style-type: ld ld-ArrowDown dark-red;
-  color: rgb(155, 20, 25); 
-  box-shadow: rgb(155, 20, 25) 0px 0px 0px 1px inset;
+  background-color: #e31837;
+  color: white;
+  z-index: 1;
 }
 
 .product-name {

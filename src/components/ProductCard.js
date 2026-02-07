@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import comingSoonImage from '../coming-soon.png';
 
 function ProductCard({ product }) {
+  const navigate = useNavigate();
+
   const formatPrice = (price) => {
     return `$${price.toFixed(2)}`;
   };
@@ -10,8 +13,12 @@ function ProductCard({ product }) {
     e.target.src = comingSoonImage;
   };
 
+  const handleCardClick = () => {
+    navigate(`/product/${product.id}`);
+  };
+
   return (
-    <div className="product-card">
+    <div className="product-card" onClick={handleCardClick}>
       {product.discountPercentage && (
         <span className="product-badge">↓ Rebaja</span>
       )}
