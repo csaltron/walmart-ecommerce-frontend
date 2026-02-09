@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import FilterSidebar from './FilterSidebar';
 import ProductList from './ProductList';
-import logo from '../public/images/logo.png';
+import { IMAGES } from '../constants/config';
 import '../styles/App.css';
 
 function HomePage() {
@@ -36,7 +36,7 @@ function HomePage() {
       <header className="header">
         <div className="header-content">
           <div className="logo">
-            <img src={logo} alt="Logo" width={100} height={100} />
+            <img src={IMAGES.LOGO} alt="Logo" width={100} height={100} />
           </div>
           <form className="search-bar" onSubmit={handleSearchSubmit}>
             <input
