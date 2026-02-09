@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import catalogService from '../services/catalogService';
-import comingSoonImage from '../coming-soon.png';
+import { useProductImage } from '../hooks/useProductImage';
+import { formatPrice } from '../utils/helpers';
 import '../styles/ProductDetail.css';
 
 function ProductDetail() {
@@ -11,68 +12,32 @@ function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const { getImageUrl, handleImageError, handleImageLoad } = useProductImage(product);
+
   useEffect(() => {
     const fetchProduct = async () => {
+      if (!id) {
+        setError('ID de producto no válido');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
         const data = await catalogService.getProductById(id);
         setProduct(data);
       } catch (err) {
-        setError(err.response?.data?.message || err.message || 'No se pudo cargar el producto');
+        const errorMessage = err.response?.data?.message || err.message || 'No se pudo cargar el producto';
+        setError(errorMessage);
         setProduct(null);
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
-      fetchProduct();
-    } else {
-      setError('ID de producto no válido');
-      setLoading(false);
-    }
+    fetchProduct();
   }, [id]);
-
-  const formatPrice = (price) => {
-    if (price === undefined || price === null || isNaN(price)) {
-      return 'Precio no disponible';
-    }
-    return `$${price.toFixed(2)}`;
-  };
-
-  // Intentar diferentes nombres de campo para la imagen
-  const getImageUrl = () => {
-    if (!product) return comingSoonImage;
-    const imageUrl = product.imageUrl || product.image || product.image_url || product.imageURL;
-    if (imageUrl && imageUrl.trim() !== '') {
-      // Si la URL es relativa (empieza con /), podría necesitar el dominio del backend
-      // Si ya es una URL completa (http:// o https://), usarla tal cual
-      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        return imageUrl;
-      }
-      // Si es relativa, intentar con el proxy del backend
-      if (imageUrl.startsWith('/')) {
-        // El proxy está configurado en package.json para localhost:8080
-        return imageUrl;
-      }
-      return imageUrl;
-    }
-    return comingSoonImage;
-  };
-
-  const handleImageError = (e) => {
-    console.log('Error cargando imagen del producto:', {
-      imageUrl: product?.imageUrl,
-      image: product?.image,
-      image_url: product?.image_url,
-      imageURL: product?.imageURL,
-      srcIntentado: e.target.src
-    });
-    if (e.target.src !== comingSoonImage) {
-      e.target.src = comingSoonImage;
-    }
-  };
 
   const handleBack = () => {
     navigate('/');
@@ -112,7 +77,7 @@ function ProductDetail() {
             alt={product.name || 'Producto'}
             className="product-detail-image"
             onError={handleImageError}
-            onLoad={() => console.log('Imagen de detalle cargada correctamente:', getImageUrl())}
+            onLoad={handleImageLoad}
           />
           {product.discountPercentage && (
             <span className="product-detail-badge">↓ Rebaja {product.discountPercentage}%</span>
@@ -124,13 +89,13 @@ function ProductDetail() {
 
           {product.brand && (
             <div className="product-detail-brand">
-              <strong>Marca:</strong> {product.brand}
+              Marca: {product.brand}
             </div>
           )}
 
           {product.category && (
             <div className="product-detail-category">
-              <strong>Categoría:</strong> {product.category}
+              Categoría: {product.category}
             </div>
           )}
 
@@ -175,7 +140,7 @@ function ProductDetail() {
 
           {product.sku && (
             <div className="product-detail-sku">
-              <strong>SKU:</strong> {product.sku}
+              SKU: {product.sku}
             </div>
           )}
 
