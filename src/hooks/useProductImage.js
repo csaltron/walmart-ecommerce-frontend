@@ -1,17 +1,17 @@
 import { useCallback } from 'react';
-import comingSoonImage from '../public/images/coming-soon.png';
+import { IMAGES } from '../constants/config';
 import { logger } from '../utils/helpers';
 
 export const useProductImage = (product) => {
   const getImageUrl = useCallback(() => {
     if (!product) {
-      return comingSoonImage;
+      return IMAGES.PLACEHOLDER;
     }
 
     const imageUrl = product.imageUrl || product.image || product.image_url || product.imageURL;
     
     if (!imageUrl || imageUrl.trim() === '') {
-      return comingSoonImage;
+      return IMAGES.PLACEHOLDER;
     }
 
     // Si es una URL completa, usarla directamente
@@ -36,8 +36,8 @@ export const useProductImage = (product) => {
       srcIntentado: e.target.src
     });
     
-    if (e.target.src !== comingSoonImage) {
-      e.target.src = comingSoonImage;
+    if (e.target.src !== IMAGES.PLACEHOLDER) {
+      e.target.src = IMAGES.PLACEHOLDER;
     }
   }, [product]);
 

@@ -23,3 +23,10 @@ export const DEFAULT_FILTERS = {
   maxPrice: null,
   inStock: null,
 };
+
+
+export const IMAGES = {
+  LOGO: '/images/logo.png',
+  PLACEHOLDER: '/images/coming-soon.png',
+  FAVICON: '/favicon.ico',
+};
