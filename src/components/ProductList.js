@@ -1,5 +1,6 @@
 import React from 'react';
 import ProductCard from './ProductCard';
+import { SORT_OPTIONS } from '../constants/config';
 
 function ProductList({ data, currentPage, onPageChange, sortBy, onSortChange }) {
   if (!data || !data.content) {
@@ -25,12 +26,17 @@ function ProductList({ data, currentPage, onPageChange, sortBy, onSortChange }) 
         <div className="results-info">
           Mostrando {startItem}-{endItem} de {totalElements} resultados
         </div>
-        <select className="sort-select" value={sortBy} onChange={(e) => onSortChange(e.target.value)}>
-          <option value="">Ordenar por</option>
-          <option value="price-asc">Precio: menor a mayor</option>
-          <option value="price-desc">Precio: mayor a menor</option>
-          <option value="name-asc">Nombre: A-Z</option>
-          <option value="name-desc">Nombre: Z-A</option>
+        <select 
+          className="sort-select" 
+          value={sortBy} 
+          onChange={(e) => onSortChange(e.target.value)}
+          aria-label="Ordenar productos"
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -45,6 +51,7 @@ function ProductList({ data, currentPage, onPageChange, sortBy, onSortChange }) 
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={page === 0}
+            aria-label="Página anterior"
           >
             Anterior
           </button>
@@ -60,6 +67,8 @@ function ProductList({ data, currentPage, onPageChange, sortBy, onSortChange }) 
                   key={index}
                   className={page === index ? 'active' : ''}
                   onClick={() => onPageChange(index)}
+                  aria-label={`Página ${index + 1}`}
+                  aria-current={page === index ? 'page' : undefined}
                 >
                   {index + 1}
                 </button>
@@ -73,6 +82,7 @@ function ProductList({ data, currentPage, onPageChange, sortBy, onSortChange }) 
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page === totalPages - 1}
+            aria-label="Página siguiente"
           >
             Siguiente
           </button>
@@ -82,4 +92,4 @@ function ProductList({ data, currentPage, onPageChange, sortBy, onSortChange }) 
   );
 }
 
-export default ProductList;
+export default React.memo(ProductList);

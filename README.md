@@ -1,4 +1,4 @@
-# Catalog Frontend - React Application
+# Walmart E-Commerce Frontend
 
 Aplicación web para búsqueda y filtrado de productos, desarrollada con React 18.
 
@@ -15,20 +15,31 @@ Aplicación web para búsqueda y filtrado de productos, desarrollada con React 1
 ### Componentes
 ```
 src/
-├── components/
-│   ├── FilterSidebar.js    # Sidebar con filtros
-│   ├── ProductCard.js      # Tarjeta individual de producto
-│   └── ProductList.js      # Lista paginada de productos
-│   ├── HomePage.js         # Página principal, búsqueda y muestra productos
-│   ├── ProductDetail.js    # Vista detallada de un producto (imagen, precio, stock, marca, etc.)
-
-├── services/
-│   └── catalogService.js   # Cliente API REST
-├── styles/
-│   └── App.css            # Estilos globales
-│   └── ProductDetails.css # Estilos especificos de los productos
-├── App.js                 # Componente principal
-└── index.js               # Punto de entrada
+├── components/           # Componentes React
+│   ├── ErrorBoundary.js
+│   ├── FilterSidebar.js
+│   ├── HomePage.js
+│   ├── ProductCard.js
+│   ├── ProductDetail.js
+│   └── ProductList.js
+├── hooks/               # Custom hooks
+│   ├── useProductImage.js
+│   └── useProducts.js
+├── services/            # Servicios API
+│   └── catalogService.js
+├── utils/               # Utilidades
+│   └── helpers.js
+├── constants/           # Constantes de configuración
+│   └── config.js
+├── styles/              # Estilos CSS
+│   ├── App.css
+│   ├── ErrorBoundary.css
+│   └── ProductDetail.css
+├── __tests__/           # Tests
+│   ├── catalogService.test.js
+│   └── helpers.test.js
+├── App.js              # Componente raíz con routing
+└── index.js            # Punto de entrada
 ```
 
 ## Requisitos Previos
@@ -36,71 +47,90 @@ src/
 - Node.js 16+ y npm
 - Backend API corriendo en `http://localhost:8080`
 
-## Instalación y Ejecución
+## Instalación
+
+```bash
+# Clonar el repositorio
 git clone https://github.com/csaltron/walmart-ecommerce-frontend.git
-
-
 cd walmart-ecommerce-frontend
 
-### 1. Instalar dependencias
-
-```bash
-cd catalog-frontend
+# Instalar dependencias
 npm install
+
+# Configurar variables de entorno
+.env
 ```
-
-### 2. Iniciar la aplicación
-
-```bash
-npm start
-```
-
-La aplicación estará disponible en: `http://localhost:3000`
-
-### 3. Build de producción
-
-```bash
-npm run build
-```
-
-Los archivos estáticos se generarán en la carpeta `build/`.
 
 ## Configuración
 
+### Variables de Entorno
+
+Crear archivo `.env` en la raíz del proyecto:
+
+```env
+REACT_APP_API_BASE_URL=http://localhost:8080/api/v1
+```
+
 ### Proxy API
-El proyecto está configurado para hacer proxy de las peticiones API al backend:
+
+El proyecto usa proxy para desarrollo (configurado en `package.json`):
 
 ```json
 "proxy": "http://localhost:8080"
 ```
 
-Si el backend corre en otro puerto, modificar en `package.json`.
+Para producción, configurar `REACT_APP_API_BASE_URL` con la URL del backend.
 
-### Variables de Entorno
-Crear archivo `.env` para configuración personalizada:
+## Comandos Disponibles
 
+```bash
+# Desarrollo
+npm start                 # Inicia servidor de desarrollo (puerto 3000)
+
+# Build
+npm run build            # Build de producción en carpeta build/
+
+# Testing
+npm test                 # Ejecuta tests una vez con coverage
+npm run test:watch       # Ejecuta tests en modo watch
+npm run test:coverage    # Genera reporte de coverage
+
+
+## Características Técnicas
+
+### Custom Hooks
+
+#### useProducts
+Maneja toda la lógica de productos, filtros, búsqueda y paginación:
+
+```javascript
+const {
+  state,           // { data, loading, error }
+  filters,         // Filtros activos
+  updateFilters,   // Actualizar filtros
+  applyFilters,    // Aplicar filtros
+  clearFilters,    // Limpiar filtros
+  handleSearch,    // Manejar búsqueda
+  handlePageChange,// Cambiar página
+  handleSortChange,// Cambiar ordenamiento
+} = useProducts();
 ```
-REACT_APP_API_BASE_URL=http://localhost:8080/api/v1
+
+#### useProductImage
+Maneja imágenes de productos con fallback:
+
+```javascript
+const { 
+  getImageUrl,      // Obtiene URL de imagen
+  handleImageError, // Maneja errores de carga
+  handleImageLoad,  // Maneja carga exitosa
+} = useProductImage(product);
 ```
-
-## Funcionalidades Implementadas
-
-### Búsqueda
-- Búsqueda en tiempo real por nombre y descripción
-- Botón de búsqueda y enter para ejecutar
-
-### Filtros
-- Precio mínimo y máximo
-- Categoría (checkbox - multiple selección)
-- Marca (checkbox - multiple selección)
-- Solo en stock (checkbox)
-- Botón "Aplicar Filtros"
-- Botón "Limpiar Filtros"
 
 
 ## Integración con Backend
 
-La aplicación consume los siguientes endpoints:
+### Endpoints Consumidos
 
 ```javascript
 GET /api/v1/products              // Lista paginada con filtros
@@ -109,90 +139,97 @@ GET /api/v1/products/categories   // Lista de categorías
 GET /api/v1/products/brands       // Lista de marcas
 ```
 
-Parámetros de búsqueda:
+### Parámetros de Búsqueda
+
 ```
-?search=texto
-&category=Categoria
-&brand=Marca
-&minPrice=10
-&maxPrice=100
-&inStock=true
-&page=0
-&size=20
-&sortBy=price
-&sortDirection=asc
+?search=texto              // Búsqueda por texto
+&category=cat1,cat2        // Filtro por categorías
+&brand=brand1,brand2       // Filtro por marcas
+&minPrice=10               // Precio mínimo
+&maxPrice=100              // Precio máximo
+&inStock=true              // Solo en stock
+&page=0                    // Página actual
+&size=20                   // Tamaño de página
+&sortBy=price              // Campo de ordenamiento
+&sortDirection=asc         // Dirección (asc/desc)
 ```
-
-## Mejoras Futuras
-
-### Funcionalidades
-- Vista de detalle de producto en modal
-- Agregar al carrito
-- Comparar productos
-- Favoritos/wishlist
-- Historial de búsqueda
-- Sugerencias de búsqueda (autocomplete)
-- Filtros avanzados por tags
-- Vista de lista alternativa
-- Compartir productos
-
-
 
 ## Testing
 
+El proyecto incluye tests unitarios con Jest y React Testing Library.
+
 ```bash
+# Ejecutar todos los tests
 npm test
+
+# Ver coverage
+npm run test:coverage
+
+# Tests en modo watch
+npm run test:watch
 ```
 
+### Coverage Mínimo Requerido
+- Branches: 50%
+- Functions: 50%
+- Lines: 50%
+- Statements: 50%
+
+## Solución de Problemas
+
 ### Error de conexión al backend
+
 Verificar que el backend esté corriendo:
 ```bash
 curl http://localhost:8080/api/v1/products
 ```
 
 ### Puerto 3000 ocupado
+
 Usar otro puerto:
 ```bash
 PORT=3001 npm start
 ```
 
+### Variables de entorno no funcionan
 
-## Estructura de Estado
+- Verificar que el archivo `.env` esté en la raíz
+- Variables deben empezar con `REACT_APP_`
+- Reiniciar el servidor de desarrollo después de cambios
 
-```javascript
-{
-  productsData: {
-    content: [...],      // Array de productos
-    page: 0,            // Página actual
-    size: 20,           // Tamaño de página
-    totalElements: 100, // Total de productos
-    totalPages: 5,      // Total de páginas
-    first: true,        // Es primera página?
-    last: false         // Es última página?
-  },
-  filters: {
-    category: '',
-    brand: '',
-    minPrice: null,
-    maxPrice: null,
-    inStock: null
-  },
-  searchText: '',
-  currentPage: 0,
-  sortBy: 'price-asc'
-}
-```
+## Mejoras Futuras
 
-## Scripts Disponibles
+### Funcionalidades
+- [ ] Carrito de compras
+- [ ] Sistema de autenticación
+- [ ] Favoritos/wishlist
+- [ ] Comparación de productos
+- [ ] Historial de búsqueda
+- [ ] Autocomplete en búsqueda
+- [ ] Filtros avanzados con tags
+- [ ] Vista de lista alternativa
+- [ ] Compartir productos en redes sociales
 
-- `npm start`: Inicia servidor de desarrollo
-- `npm run build`: Build de producción
-- `npm test`: Ejecuta tests
-- `npm run eject`: Expone configuración de webpack (irreversible)
+### Técnicas
+- [ ] Service Workers para PWA
+- [ ] Server-Side Rendering (Next.js)
+- [ ] State management con Redux o Zustand
+- [ ] Internacionalización (i18n)
+- [ ] Análisis con Google Analytics
+- [ ] Monitoreo de errores con Sentry
+- [ ] A/B Testing
+- [ ] Optimización de imágenes (WebP, lazy loading)
+- [ ] CI/CD pipeline
+- [ ] E2E tests con Cypress
 
 ## Tecnologías Utilizadas
 
-- React 18.2
-- Axios para peticiones HTTP
-- CSS puro (sin frameworks)
+- **React** 18.2 - Biblioteca UI
+- **React Router DOM** 7.13 - Routing
+- **Axios** 1.6 - Cliente HTTP
+- **Jest** - Testing framework
+- **React Testing Library** - Testing de componentes
+- **ESLint** - Linting
+- **Prettier** - Formateo de código
+- **CSS3** - Estilos (sin frameworks)
 - Create React App

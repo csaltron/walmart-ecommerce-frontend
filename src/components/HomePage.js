@@ -1,99 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import catalogService from '../services/catalogService';
+import React, { useState } from 'react';
+import { useProducts } from '../hooks/useProducts';
 import FilterSidebar from './FilterSidebar';
 import ProductList from './ProductList';
 import logo from '../logo.png';
 import '../styles/App.css';
 
 function HomePage() {
-  const [productsData, setProductsData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [sortBy, setSortBy] = useState('');
-  const [filters, setFilters] = useState({
-    category: [],
-    brand: [],
-    minPrice: null,
-    maxPrice: null,
-    inStock: null,
-  });
+  
+  const {
+    state,
+    filters,
+    currentPage,
+    sortBy,
+    updateFilters,
+    applyFilters,
+    clearFilters,
+    handlePageChange,
+    handleSortChange,
+    handleSearch,
+  } = useProducts();
 
-  useEffect(() => {
-    fetchProducts();
-  }, [currentPage, searchText, sortBy]);
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page: currentPage,
-        size: 20,
-        search: searchText || undefined,
-        category: filters.category && filters.category.length > 0 ? filters.category.join(',') : undefined,
-        brand: filters.brand && filters.brand.length > 0 ? filters.brand.join(',') : undefined,
-        minPrice: filters.minPrice || undefined,
-        maxPrice: filters.maxPrice || undefined,
-        inStock: filters.inStock || undefined,
-      };
-
-      if (sortBy) {
-        const [field, direction] = sortBy.split('-');
-        params.sortBy = field;
-        params.sortDirection = direction;
-      }
-
-      const data = await catalogService.searchProducts(params);
-      setProductsData(data);
-    } catch (error) {
-      console.error('Error cargando productos:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = (e) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    setSearchText(searchInput);
-    setCurrentPage(0);
+    handleSearch(searchInput);
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleApplyFilters = () => {
-    setCurrentPage(0);
-    fetchProducts();
-  };
-
-  const handleClearFilters = () => {
-    setFilters({
-      category: [],
-      brand: [],
-      minPrice: null,
-      maxPrice: null,
-      inStock: null,
-    });
-    setSearchText('');
+  const handleClearFiltersAndInput = () => {
     setSearchInput('');
-    setSortBy('');
-    setCurrentPage(0);
-    setTimeout(() => fetchProducts(), 100);
-  };
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleSortChange = (newSort) => {
-    setSortBy(newSort);
-    setCurrentPage(0);
+    clearFilters();
   };
 
   return (
@@ -103,7 +38,7 @@ function HomePage() {
           <div className="logo">
             <img src={logo} alt="Logo" width={100} height={100} />
           </div>
-          <form className="search-bar" onSubmit={handleSearch}>
+          <form className="search-bar" onSubmit={handleSearchSubmit}>
             <input
               type="text"
               className="search-input"
@@ -121,16 +56,23 @@ function HomePage() {
       <div className="main-container">
         <FilterSidebar
           filters={filters}
-          onFilterChange={handleFilterChange}
-          onApplyFilters={handleApplyFilters}
-          onClearFilters={handleClearFilters}
+          onFilterChange={updateFilters}
+          onApplyFilters={applyFilters}
+          onClearFilters={handleClearFiltersAndInput}
         />
 
-        {loading ? (
+        {state.loading ? (
           <div className="loading">Cargando productos...</div>
+        ) : state.error ? (
+          <div className="error-message">
+            <p>Error: {state.error}</p>
+            <button onClick={applyFilters} className="retry-button">
+              Reintentar
+            </button>
+          </div>
         ) : (
           <ProductList
-            data={productsData}
+            data={state.data}
             currentPage={currentPage}
             onPageChange={handlePageChange}
             sortBy={sortBy}

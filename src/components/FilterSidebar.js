@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import catalogService from '../services/catalogService';
+import { logger } from '../utils/helpers';
 
 function FilterSidebar({ filters, onFilterChange, onApplyFilters, onClearFilters }) {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadFilterOptions();
@@ -13,6 +15,7 @@ function FilterSidebar({ filters, onFilterChange, onApplyFilters, onClearFilters
 
   const loadFilterOptions = async () => {
     try {
+      setLoading(true);
       const [categoriesData, brandsData] = await Promise.all([
         catalogService.getCategories(),
         catalogService.getBrands(),
@@ -20,29 +23,25 @@ function FilterSidebar({ filters, onFilterChange, onApplyFilters, onClearFilters
       setCategories(categoriesData);
       setBrands(brandsData);
     } catch (error) {
-      console.error('Error cargando opciones de filtros:', error);
+      logger.error('Error cargando opciones de filtros:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCategoryChange = (category, isChecked) => {
     const currentCategories = filters.category || [];
-    let newCategories;
-    if (isChecked) {
-      newCategories = [...currentCategories, category];
-    } else {
-      newCategories = currentCategories.filter((c) => c !== category);
-    }
+    const newCategories = isChecked
+      ? [...currentCategories, category]
+      : currentCategories.filter((c) => c !== category);
     onFilterChange('category', newCategories);
   };
 
   const handleBrandChange = (brand, isChecked) => {
     const currentBrands = filters.brand || [];
-    let newBrands;
-    if (isChecked) {
-      newBrands = [...currentBrands, brand];
-    } else {
-      newBrands = currentBrands.filter((b) => b !== brand);
-    }
+    const newBrands = isChecked
+      ? [...currentBrands, brand]
+      : currentBrands.filter((b) => b !== brand);
     onFilterChange('brand', newBrands);
   };
 
@@ -50,10 +49,28 @@ function FilterSidebar({ filters, onFilterChange, onApplyFilters, onClearFilters
     onFilterChange('inStock', e.target.checked ? true : null);
   };
 
-  const handlePriceFilter = () => {
+  const handleApplyPriceAndFilters = () => {
     onFilterChange('minPrice', minPrice ? parseFloat(minPrice) : null);
     onFilterChange('maxPrice', maxPrice ? parseFloat(maxPrice) : null);
+    // Pequeño delay para asegurar que los filtros se actualicen
+    setTimeout(() => {
+      onApplyFilters();
+    }, 50);
   };
+
+  const handleClearAll = () => {
+    setMinPrice('');
+    setMaxPrice('');
+    onClearFilters();
+  };
+
+  if (loading) {
+    return (
+      <div className="sidebar">
+        <div className="loading">Cargando filtros...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="sidebar">
@@ -73,18 +90,19 @@ function FilterSidebar({ filters, onFilterChange, onApplyFilters, onClearFilters
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-              /><br />
+                min="0"
+                aria-label="Precio mínimo"
+              />
               <input
                 type="number"
                 className="price-input"
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
+                min="0"
+                aria-label="Precio máximo"
               />
             </div>
-            <button className="filter-button" onClick={handlePriceFilter}>
-              Aplicar Precio
-            </button>
           </div>
         </details>
       </div>
@@ -104,6 +122,7 @@ function FilterSidebar({ filters, onFilterChange, onApplyFilters, onClearFilters
                   type="checkbox"
                   checked={filters.category && filters.category.includes(category)}
                   onChange={(e) => handleCategoryChange(category, e.target.checked)}
+                  aria-label={`Filtrar por categoría ${category}`}
                 />
                 {category}
               </label>
@@ -127,6 +146,7 @@ function FilterSidebar({ filters, onFilterChange, onApplyFilters, onClearFilters
                   type="checkbox"
                   checked={filters.brand && filters.brand.includes(brand)}
                   onChange={(e) => handleBrandChange(brand, e.target.checked)}
+                  aria-label={`Filtrar por marca ${brand}`}
                 />
                 {brand}
               </label>
@@ -141,16 +161,17 @@ function FilterSidebar({ filters, onFilterChange, onApplyFilters, onClearFilters
             type="checkbox"
             checked={filters.inStock || false}
             onChange={handleInStockChange}
+            aria-label="Solo productos en stock"
           />
           Solo en stock
         </label>
       </div>
 
-      <button className="filter-button" onClick={onApplyFilters}>
+      <button className="filter-button" onClick={handleApplyPriceAndFilters}>
         Aplicar Filtros
       </button>
       
-      <button className="clear-filters" onClick={onClearFilters}>
+      <button className="clear-filters" onClick={handleClearAll}>
         Limpiar Filtros
       </button>
     </div>
