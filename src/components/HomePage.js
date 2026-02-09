@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import FilterSidebar from './FilterSidebar';
 import ProductList from './ProductList';
-import logo from '../logo.png';
+import logo from '../public/images/logo.png';
 import '../styles/App.css';
 
 function HomePage() {

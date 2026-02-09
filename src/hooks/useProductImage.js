@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import comingSoonImage from '../coming-soon.png';
+import comingSoonImage from '../public/images/coming-soon.png';
 import { logger } from '../utils/helpers';
 
 export const useProductImage = (product) => {
